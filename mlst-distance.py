@@ -52,15 +52,16 @@ def print_output(distance_matrix):
     distance_matrix is dict {(sample_1_id, sample_2_id): distance}
     """
     sample_ids = sorted(set(list(sum(distance_matrix.keys(), ()))))
-    print('\t', '\t'.join(sample_ids), sep="")
+    print(len(sample_ids))
     for sample_id_1 in sample_ids:
-        print(sample_id_1, '\t', sep="", end="")
+        print(sample_id_1, end=" ")
+        distance_row = []
         for sample_id_2 in sample_ids:
             try:
-                print(distance_matrix[sample_id_1, sample_id_2], '\t', sep="", end="")
+                distance_row.append(distance_matrix[sample_id_2, sample_id_1])
             except KeyError:
-                print('\t', end="")
-        print()
+                continue
+        print(" ".join("%.8f" % i for i in distance_row))
     
     
 def main():
