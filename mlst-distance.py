@@ -5,7 +5,7 @@ import csv
 import itertools
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Calculate distance matrix from MentaLiST MLST output.')
     parser.add_argument('input_file',
                         help='Input file')
     parser.add_argument('-s', '--sep', nargs=1, default='\t',
