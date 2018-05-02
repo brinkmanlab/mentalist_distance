@@ -12,6 +12,8 @@ def parse_args():
                         help="Input file field separator")
     parser.add_argument('-q', '--quote', nargs=1, default='"',
                         help="Input file quote char")
+    parser.add_argument('-m', '--metric', default='absolute',
+                        help="Distance metric ('proportion' or 'absolute')")
     args = parser.parse_args()
     return args
 
@@ -29,22 +31,25 @@ def read_input(input_file, sep, quote):
     
     return sample_data
 
-def calculate_distance(sample_1_sts, sample_2_sts):
+def calculate_distance(sample_1_sts, sample_2_sts, metric="absolute"):
     assert len(sample_1_sts) == len(sample_2_sts)
     total_sts = len(sample_1_sts)
-    equal_sts = 0
+    different_sts = 0
     for sample_1_st, sample_2_st in zip(sample_1_sts, sample_2_sts):
-        if sample_1_st == sample_2_st:
-            equal_sts += 1
-    return equal_sts / total_sts
+        if sample_1_st != sample_2_st:
+            different_sts += 1
+    if metric == "absolute":
+        return different_sts
+    elif metric == "proportion":
+        return different_sts / total_sts
 
-def generate_distance_matrix(sample_data):
+def generate_distance_matrix(sample_data, metric):
     """
     distance_matrix is dict {(sample_1_id, sample_2_id): distance}
     """
     distance_matrix = {}
     for sample_1, sample_2 in itertools.combinations(sample_data, 2):
-        distance_matrix[(sample_1, sample_2)] = calculate_distance(sample_data[sample_1], sample_data[sample_2])
+        distance_matrix[(sample_1, sample_2)] = calculate_distance(sample_data[sample_1], sample_data[sample_2], metric)
     return distance_matrix
 
 def print_output(distance_matrix):
@@ -67,7 +72,7 @@ def print_output(distance_matrix):
 def main():
     args = parse_args()
     sample_data = read_input(args.input_file, args.sep, args.quote)
-    distance_matrix = generate_distance_matrix(sample_data)
+    distance_matrix = generate_distance_matrix(sample_data, args.metric)
     print_output(distance_matrix)
 
 if __name__ == '__main__':
