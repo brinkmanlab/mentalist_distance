@@ -12,7 +12,7 @@ def parse_args():
                         help="Input file field separator")
     parser.add_argument('-q', '--quote', nargs=1, default='"',
                         help="Input file quote char")
-    parser.add_argument('-m', '--metric', default='absolute',
+    parser.add_argument('-m', '--metric', default='count',
                         help="Distance metric ('proportion' or 'count')")
     parser.add_argument('-f', '--format', default='square',
                         help="Matrix format ('square' or 'triangular')")
@@ -28,23 +28,25 @@ def read_input(input_file, sep, quote):
       sep: csv separator character (typically '\t' or ',')
       quote: csv quote character
     output:
-      sample_data: dict {sample_id, [sequence types]}
+       ([sample_id], [sequence_type])
     """
-    sample_data = {}
+    sequence_types = []
+    sample_ids = []
     with open(input_file) as f:
         csvreader = csv.reader(f, delimiter=sep, quotechar=quote)
         next(csvreader) # Skip header
         for row in csvreader:
-            sample_data[row[0]] = row[1:]
-    return sample_data
+            sample_ids.append(row[0])
+            sequence_types.append(row[1:])
+    return (sample_ids, sequence_types)
 
 def calculate_distance(sample_1_sts, sample_2_sts, metric="count"):
     """
     Calculate the number of differences between two equal-length lists of symbols.
     If metric=="proportion" then return the proportion, otherwise return the absolute number
     input:
-      sample_1_sts: list [sequence types]
-      sample_2_sts: list [sequence types]
+      sample_1_sts: [sequence type]
+      sample_2_sts: [sequence type]
       metric: "count" or "proportion"
     output:
       distance between samples (numeric)
@@ -60,49 +62,46 @@ def calculate_distance(sample_1_sts, sample_2_sts, metric="count"):
     elif metric == "proportion":
         return different_sts / total_sts
 
-def generate_distance_matrix(sample_data, metric):
+def generate_distance_matrix(sample_ids, sequence_types, metric):
     """
     input:
-      sample_data: dict {sample_id, [sequence types]}
+      sample_ids: [sample_id]
+      sequence_types: [[sequence_type]]}
       metric: "count" or "proportion"
     output:
-      distance_matrix: dict {(sample_1_id, sample_2_id): distance}
+      distance_matrix: dict {sample_id: [distances]}
     """
-    distance_matrix = {}
-    for sample_1, sample_2 in itertools.combinations_with_replacement(sample_data, 2):
-        distance_matrix[(sample_1, sample_2)] = calculate_distance(sample_data[sample_1], sample_data[sample_2], metric)
+    distance_matrix = []
+    for i, sample_1 in enumerate(sample_ids):
+        distance_row = []
+        for j, sample_2 in enumerate(sample_ids):
+            distance_row.append(calculate_distance(sequence_types[i], sequence_types[j], metric))
+        distance_matrix.append(distance_row)
     return distance_matrix
 
-def print_output(distance_matrix, format):
+def print_output(sample_ids, distance_matrix, format):
     """
     input: 
-      distance_matrix:  dict {(sample_1_id, sample_2_id): distance}
+      sample_ids: [sample_id]
+      distance_matrix:  [[distance]]
       format: "square" or "triangular"
     output: none, prints to stdout
     """
-    sample_ids = sorted(set(list(sum(distance_matrix.keys(), ()))))
     print(len(sample_ids))
-    for sample_id_1 in sample_ids:
-        print(sample_id_1, end=" ")
-        distance_row = []
-        for sample_id_2 in sample_ids:
-            if sample_id_1 == sample_id_2 and format == "triangular":
-                continue
-            try:
-                distance_row.append(distance_matrix[sample_id_2, sample_id_1])
-            except KeyError:
-                if format == "square":
-                    distance_row.append(distance_matrix[sample_id_1, sample_id_2])
-                elif format == "triangular":
-                    continue
+    for i, sample_id in enumerate(sample_ids):
+        print(sample_id, end=" ")
+        if format == "square":
+            distance_row = distance_matrix[i]
+        elif format == "triangular":
+            distance_row = distance_matrix[i][:i]
         print(" ".join("%.8f" % i for i in distance_row))
     
     
 def main():
     args = parse_args()
-    sample_data = read_input(args.input_file, args.sep, args.quote)
-    distance_matrix = generate_distance_matrix(sample_data, args.metric)
-    print_output(distance_matrix, args.format)
+    sample_ids, sequence_types = read_input(args.input_file, args.sep, args.quote)
+    distance_matrix = generate_distance_matrix(sample_ids, sequence_types, args.metric)
+    print_output(sample_ids, distance_matrix, args.format)
 
 if __name__ == '__main__':
     main()
