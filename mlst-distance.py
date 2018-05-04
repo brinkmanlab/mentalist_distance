@@ -3,6 +3,9 @@
 import argparse
 import csv
 import itertools
+import numpy as np
+from scipy.spatial.distance import pdist, squareform
+from scipy.cluster.hierarchy import dendrogram, linkage, to_tree
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Calculate distance matrix from MentaLiST MLST output.')
@@ -12,8 +15,8 @@ def parse_args():
                         help="Input file field separator")
     parser.add_argument('-q', '--quote', nargs=1, default='"',
                         help="Input file quote char")
-    parser.add_argument('-m', '--metric', default='count',
-                        help="Distance metric ('proportion' or 'count')")
+    parser.add_argument('-m', '--metric', default='hamming',
+                        help="Distance metric")
     parser.add_argument('-f', '--format', default='square',
                         help="Matrix format ('square' or 'triangular')")
     args = parser.parse_args()
@@ -40,46 +43,26 @@ def read_input(input_file, sep, quote):
             sequence_types.append(row[1:])
     return (sample_ids, sequence_types)
 
-def calculate_distance(sample_1_sts, sample_2_sts, metric="count"):
+def calculate_distance_matrix(sequence_types):
     """
     Calculate the number of differences between two equal-length lists of symbols.
     If metric=="proportion" then return the proportion, otherwise return the absolute number
     input:
-      sample_1_sts: [sequence type]
-      sample_2_sts: [sequence type]
-      metric: "count" or "proportion"
+      sequence_types: [[sequence_type]]
+      metric: see: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
     output:
-      distance between samples (numeric)
+      condensed distance matrix
     """
-    assert len(sample_1_sts) == len(sample_2_sts)
-    total_sts = len(sample_1_sts)
-    different_sts = 0
-    for sample_1_st, sample_2_st in zip(sample_1_sts, sample_2_sts):
-        if sample_1_st != sample_2_st:
-            different_sts += 1
-    if metric == "count":
-        return different_sts
-    elif metric == "proportion":
-        return different_sts / total_sts
+    def distance(xs, ys):
+        assert(len(xs) == len(ys))
+        d = 0
+        for (x, y) in zip(xs, ys):
+            if  x != y:
+                d += 1
+        return d
+    return pdist(sequence_types, distance)
 
-def generate_distance_matrix(sample_ids, sequence_types, metric):
-    """
-    input:
-      sample_ids: [sample_id]
-      sequence_types: [[sequence_type]]}
-      metric: "count" or "proportion"
-    output:
-      distance_matrix: dict {sample_id: [distances]}
-    """
-    distance_matrix = []
-    for i, sample_1 in enumerate(sample_ids):
-        distance_row = []
-        for j, sample_2 in enumerate(sample_ids):
-            distance_row.append(calculate_distance(sequence_types[i], sequence_types[j], metric))
-        distance_matrix.append(distance_row)
-    return distance_matrix
-
-def print_output(sample_ids, distance_matrix, format):
+def print_distance_matrix(sample_ids, distance_matrix):
     """
     input: 
       sample_ids: [sample_id]
@@ -87,21 +70,20 @@ def print_output(sample_ids, distance_matrix, format):
       format: "square" or "triangular"
     output: none, prints to stdout
     """
-    print(len(sample_ids))
+    square_distance_matrix = squareform(distance_matrix)
     for i, sample_id in enumerate(sample_ids):
-        print(sample_id, end=" ")
-        if format == "square":
-            distance_row = distance_matrix[i]
-        elif format == "triangular":
-            distance_row = distance_matrix[i][:i]
-        print(" ".join("%.8f" % i for i in distance_row))
-    
+        print(sample_id, square_distance_matrix[i])
+
+def cluster(distance_matrix):
+    Z = linkage(distance_matrix, 'average')
+    return linked
     
 def main():
     args = parse_args()
     sample_ids, sequence_types = read_input(args.input_file, args.sep, args.quote)
-    distance_matrix = generate_distance_matrix(sample_ids, sequence_types, args.metric)
-    print_output(sample_ids, distance_matrix, args.format)
+    distance_matrix = calculate_distance_matrix(sequence_types)
+    print_distance_matrix(sample_ids, distance_matrix)
+
 
 if __name__ == '__main__':
     main()
