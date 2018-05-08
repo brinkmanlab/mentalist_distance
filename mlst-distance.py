@@ -15,10 +15,6 @@ def parse_args():
                         help="Input file field separator")
     parser.add_argument('-q', '--quote', nargs=1, default='"',
                         help="Input file quote char")
-    parser.add_argument('-m', '--metric', default='hamming',
-                        help="Distance metric")
-    parser.add_argument('-f', '--format', default='square',
-                        help="Matrix format ('square' or 'triangular')")
     args = parser.parse_args()
     return args
 
@@ -53,30 +49,26 @@ def calculate_distance_matrix(sequence_types):
     output:
       condensed distance matrix
     """
-    def distance(xs, ys):
+    def hamming_distance(xs, ys):
         assert(len(xs) == len(ys))
         d = 0
         for (x, y) in zip(xs, ys):
             if  x != y:
                 d += 1
         return d
-    return pdist(sequence_types, distance)
+    return pdist(sequence_types, hamming_distance)
 
 def print_distance_matrix(sample_ids, distance_matrix):
     """
     input: 
       sample_ids: [sample_id]
       distance_matrix:  [[distance]]
-      format: "square" or "triangular"
     output: none, prints to stdout
     """
     square_distance_matrix = squareform(distance_matrix)
+    print(len(sample_ids))
     for i, sample_id in enumerate(sample_ids):
-        print(sample_id, square_distance_matrix[i])
-
-def cluster(distance_matrix):
-    Z = linkage(distance_matrix, 'average')
-    return linked
+        print(sample_id, '\t'.join(map(str, square_distance_matrix[i])), sep='\t')
     
 def main():
     args = parse_args()
