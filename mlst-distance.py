@@ -2,41 +2,46 @@
 
 import argparse
 import csv
-import itertools
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
-from scipy.cluster.hierarchy import dendrogram, linkage, to_tree
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Calculate distance matrix from MentaLiST MLST output.')
-    parser.add_argument('input_file',
+    parser.add_argument('input',
                         help='Input file')
     parser.add_argument('-s', '--sep', nargs=1, default='\t',
                         help="Input file field separator")
     parser.add_argument('-q', '--quote', nargs=1, default='"',
                         help="Input file quote char")
+    parser.add_argument('-e', '--exclude',
+                        help="Comma-separated list of labels for columns to exclude")
     args = parser.parse_args()
     return args
 
 
-def read_input(input_file, sep, quote):
+def read_input(input_file, sep='\t', quote='"', excluded):
     """
-    Reads csv, returns map of {sample_id: [array of sequence types]}
+    Reads csv, returns tuple ([sample_id], [[sequence_type]]
     input:
       input_file: file path string
       sep: csv separator character (typically '\t' or ',')
       quote: csv quote character
+      excluded: headers of columns to exclude from sequence type matrix
     output:
-       ([sample_id], [sequence_type])
+       ([sample_id], [[sequence_type]])
     """
     sequence_types = []
     sample_ids = []
     with open(input_file) as f:
         csvreader = csv.reader(f, delimiter=sep, quotechar=quote)
-        next(csvreader) # Skip header
+        header = next(csvreader)
+        excluded_idxs = {1}
+        for idx, label in enumerate(header):
+            if label in excluded:
+                excluded_idxs.add(idx)
         for row in csvreader:
             sample_ids.append(row[0])
-            sequence_types.append(row[1:])
+            sequence_types.append([element for idx, element in enumerate(row) if idx not in excluded_idxs])
     return (sample_ids, sequence_types)
 
 def calculate_distance_matrix(sequence_types):
@@ -47,7 +52,7 @@ def calculate_distance_matrix(sequence_types):
       sequence_types: [[sequence_type]]
       metric: see: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html
     output:
-      condensed distance matrix
+      condensed distance matrix (numpy ndarray)
     """
     def hamming_distance(xs, ys):
         assert(len(xs) == len(ys))
@@ -62,19 +67,22 @@ def print_distance_matrix(sample_ids, distance_matrix):
     """
     input: 
       sample_ids: [sample_id]
-      distance_matrix:  [[distance]]
+      distance_matrix:  numpy ndarray
     output: none, prints to stdout
     """
     square_distance_matrix = squareform(distance_matrix)
     print(len(sample_ids))
     for i, sample_id in enumerate(sample_ids):
-        print(sample_id, '\t'.join(map(str, square_distance_matrix[i])), sep='\t')
+        print(sample_id, ' '.join(map(str, square_distance_matrix[i])), sep=' ')
     
 def main():
     args = parse_args()
-    sample_ids, sequence_types = read_input(args.input_file, args.sep, args.quote)
+    excluded_labels = set(['ST', 'clonal_complex'])
+    if args.exclude:
+        excluded_labels |= set(args.exclude.split(','))
+    sample_ids, sequence_types = read_input(args.input, args.sep, args.quote, excluded_labels)
     distance_matrix = calculate_distance_matrix(sequence_types)
-    print_distance_matrix(sample_ids, distance_matrix)
+    print_distance_matrix(sample_ids, distance_matrix.astype(int))
 
 
 if __name__ == '__main__':
