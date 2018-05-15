@@ -10,7 +10,11 @@ mlst_calls = function(call_file, exclude=c()){
   mlst_calls = read.csv(call_file, row.names=1, sep="\t")
   # exclude non allele calls:
   exclude <- c(exclude, c("ST", "clonal_complex"))
-  return(mlst_calls[ , -which(names(mlst_calls) %in% exclude)])
+  if(any(exclude %in% names(mlst_calls))) {
+    return(mlst_calls[ , -which(names(mlst_calls) %in% exclude)])
+  } else {
+    return(mlst_calls)
+  }
 }
 
 #' ham_distance  compute the hamming distance matrix (row by row)
