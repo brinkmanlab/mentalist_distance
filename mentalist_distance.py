@@ -35,7 +35,7 @@ def read_input(input_file, excluded, sep='\t', quote='"'):
     with open(input_file) as f:
         csvreader = csv.reader(f, delimiter=sep, quotechar=quote)
         header = next(csvreader)
-        excluded_idxs = {1}
+        excluded_idxs = {0}
         for idx, label in enumerate(header):
             if label in excluded:
                 excluded_idxs.add(idx)
