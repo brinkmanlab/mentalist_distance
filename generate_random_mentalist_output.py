@@ -13,7 +13,7 @@ for sample in sample_ids:
     for j, locus in enumerate(locus_ids):
         sequence_types[sample].append(randint(0, 9))
 
-print('\t', '\t'.join(locus_ids), sep='')
+print('Sample', '\t'.join(locus_ids), sep='\t')
 
 for sample in sequence_types:
     print(sample, '\t'.join(map(str, sequence_types[sample])), sep='\t')
