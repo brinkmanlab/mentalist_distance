@@ -1,0 +1,43 @@
+#!/usr/bin/env Rscript
+
+args = commandArgs(trailingOnly=TRUE)
+
+#' extract the MLST data
+#' @param glob_pattern -> pattern with all MLST call files; ex: "folder/*.class"
+#' @param exclude (optional) -> columns to exclude in the MLST call files.
+#' @return a MLST call matrix, with samples on the rows and loci on the columns.
+mlst_calls = function(call_file, exclude=c()){
+  mlst_calls = read.csv(call_file, row.names=1, sep="\t")
+  # exclude non allele calls:
+  exclude <- c(exclude, c("ST", "clonal_complex"))
+  return(mlst_calls[ , -which(names(mlst_calls) %in% exclude)])
+}
+
+#' ham_distance  compute the hamming distance matrix (row by row)
+#' @param X matrix
+#' @return dist_matrix the distance matrix of the X's rows with the haming distance
+ham_distance = function(X){
+  X[is.na(X)] <- -1
+  X <- as.matrix(X)
+  characs = unique(as.vector(X))
+  U = X == characs[1]
+  Cumu = U %*% t(U)
+  for (chara in characs[-1]){
+    U = X == chara
+    Cumu = Cumu + U %*% t(U)
+  }
+  dist = ncol(X) - Cumu
+  return(dist)
+}
+
+
+main <- function(args) {
+     suppressMessages(library(phangorn))
+     mlst <- mlst_calls(args[1])
+     d_matrix <- ham_distance(mlst)
+     writeDist(d_matrix, format='phylip')
+}
+
+if(!interactive()) {
+    main(args)
+}
