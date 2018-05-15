@@ -19,7 +19,7 @@ def parse_args():
     return args
 
 
-def read_input(input_file, sep='\t', quote='"', excluded):
+def read_input(input_file, excluded, sep='\t', quote='"'):
     """
     Reads csv, returns tuple ([sample_id], [[sequence_type]]
     input:
@@ -80,7 +80,7 @@ def main():
     excluded_labels = set(['ST', 'clonal_complex'])
     if args.exclude:
         excluded_labels |= set(args.exclude.split(','))
-    sample_ids, sequence_types = read_input(args.input, args.sep, args.quote, excluded_labels)
+    sample_ids, sequence_types = read_input(args.input, excluded_labels, args.sep, args.quote)
     distance_matrix = calculate_distance_matrix(sequence_types)
     print_distance_matrix(sample_ids, distance_matrix.astype(int))
 
