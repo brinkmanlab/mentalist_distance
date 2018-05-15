@@ -3,7 +3,7 @@
 args = commandArgs(trailingOnly=TRUE)
 
 #' extract the MLST data
-#' @param glob_pattern -> pattern with all MLST call files; ex: "folder/*.class"
+#' @param call_file -> MLST call file
 #' @param exclude (optional) -> columns to exclude in the MLST call files.
 #' @return a MLST call matrix, with samples on the rows and loci on the columns.
 mlst_calls = function(call_file, exclude=c()){
