@@ -35,7 +35,7 @@ ham_distance = function(X){
 }
 
 usage <- function() {
-  print("usage: mentalist_distance <input>")
+  cat("usage: mentalist_distance <input.tsv>\n")
 }
 
 
