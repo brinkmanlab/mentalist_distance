@@ -1,0 +1,7 @@
+name: mentalist_distance
+owner: dfornika
+description: Calculate a distance matrix from MentaLiST output.
+homepage_url: https://github.com/dfornika/mentalist_distance
+long_description: 
+remote_repository_url: https://github.com/dfornika/mentalist_distance.git
+type: unrestricted
