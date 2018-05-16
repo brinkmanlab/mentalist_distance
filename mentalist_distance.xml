@@ -5,7 +5,7 @@
     > '${output}'
   ]]></command>
   <inputs>
-    <param name="input" type="data" format="tsv" label="MentaLiST Calls" help=""/>
+    <param name="input" type="data" format="tabular" label="MentaLiST Calls" help=""/>
   </inputs>
   <outputs>
     <data name="output" format="phylip"/>
