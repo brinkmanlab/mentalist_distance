@@ -34,12 +34,20 @@ ham_distance = function(X){
   return(dist)
 }
 
+usage <- function() {
+  print("usage: mentalist_distance <input>")
+}
+
 
 main <- function(args) {
-     suppressMessages(library(phangorn))
-     mlst <- mlst_calls(args[1])
-     d_matrix <- ham_distance(mlst)
-     writeDist(d_matrix, format='phylip')
+  suppressMessages(library(phangorn))
+  if(is.na(args[1])){
+    usage()
+    return()
+  }
+  mlst <- mlst_calls(args[1])
+  d_matrix <- ham_distance(mlst)
+  writeDist(d_matrix, format='phylip')
 }
 
 if(!interactive()) {
