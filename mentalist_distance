@@ -40,14 +40,14 @@ usage <- function() {
 
 
 main <- function(args) {
-  suppressMessages(library(phangorn))
   if(is.na(args[1])){
     usage()
     return()
   }
   mlst <- mlst_calls(args[1])
   d_matrix <- ham_distance(mlst)
-  writeDist(d_matrix, format='phylip')
+  cat(dim(d_matrix)[1], '\n', sep='')
+  write.table(d_matrix, quote=FALSE, col.names=FALSE)
 }
 
 if(!interactive()) {
